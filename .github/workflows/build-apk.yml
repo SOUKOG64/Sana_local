@@ -1,0 +1,91 @@
+name: Build Android APK
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf \
+            automake \
+            ccache \
+            cmake \
+            libffi-dev \
+            libltdl-dev \
+            libncurses-dev \
+            libssl-dev \
+            libtool \
+            make \
+            pkg-config \
+            python3-venv \
+            build-essential \
+            git \
+            patch \
+            unzip \
+            zip \
+            zlib1g-dev
+
+      - name: Cache Buildozer
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.buildozer
+            client/.buildozer
+          key: buildozer-${{ runner.os }}-${{ hashFiles('client/buildozer.spec') }}
+          restore-keys: |
+            buildozer-${{ runner.os }}-
+
+      - name: Build debug APK
+        working-directory: client
+        env:
+          BUILDOZER_WARN_ON_ROOT: "0"
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          python -m pip install --upgrade pip
+          # setuptools нужен: buildozer 1.5.0 импортирует distutils
+          python -m pip install "setuptools<81" wheel "Cython==0.29.36" "buildozer==1.5.0"
+          buildozer -v android debug 2>&1 | tee ../buildozer.log
+          test ${PIPESTATUS[0]} -eq 0
+
+      - name: Upload build log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: buildozer-log
+          path: buildozer.log
+          if-no-files-found: ignore
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: art-fencing-debug-apk
+          path: client/bin/*.apk
+          if-no-files-found: error
+          retention-days: 14
