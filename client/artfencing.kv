@@ -1,0 +1,236 @@
+#:import dp kivy.metrics.dp
+
+# ---------- единый стиль ----------
+<Btn@Button>:
+    background_normal: ''
+    background_color: 0.78, 0.18, 0.22, 1
+    color: 1, 1, 1, 1
+    size_hint_y: None
+    height: dp(48)
+    font_size: '16sp'
+
+<BtnGray@Btn>:
+    background_color: 0.25, 0.25, 0.33, 1
+
+<Field@TextInput>:
+    multiline: False
+    size_hint_y: None
+    height: dp(44)
+    padding: dp(10), dp(12)
+    background_color: 0.18, 0.18, 0.24, 1
+    foreground_color: 1, 1, 1, 1
+    cursor_color: 1, 1, 1, 1
+    hint_text_color: 0.6, 0.6, 0.66, 1
+
+<Title@Label>:
+    font_size: '24sp'
+    bold: True
+    size_hint_y: None
+    height: dp(56)
+    color: 0.96, 0.8, 0.4, 1
+
+<Text@Label>:
+    color: 0.92, 0.92, 0.95, 1
+    size_hint_y: None
+    height: dp(28)
+
+<Pick@Spinner>:
+    size_hint_y: None
+    height: dp(44)
+    background_normal: ''
+    background_color: 0.25, 0.25, 0.33, 1
+    color: 1, 1, 1, 1
+
+# ---------- экран авторизации ----------
+<LoginScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(30)
+        spacing: dp(12)
+        Widget:
+            size_hint_y: 0.15
+        Title:
+            text: 'Арт-Фехтование'
+        Text:
+            text: 'Вход в систему'
+        Field:
+            id: email
+            hint_text: 'Email'
+        Field:
+            id: password
+            hint_text: 'Пароль'
+            password: True
+        Btn:
+            text: 'Войти'
+            on_release: root.do_login()
+        BtnGray:
+            text: 'Регистрация'
+            on_release: app.go('register')
+        Widget:
+
+# ---------- экран регистрации ----------
+<RegisterScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(30)
+        spacing: dp(12)
+        Widget:
+            size_hint_y: 0.1
+        Title:
+            text: 'Регистрация'
+        Field:
+            id: email
+            hint_text: 'Email'
+        Field:
+            id: password
+            hint_text: 'Пароль (не короче 6 символов)'
+            password: True
+        Field:
+            id: password2
+            hint_text: 'Повторите пароль'
+            password: True
+        Btn:
+            text: 'Создать аккаунт'
+            on_release: root.do_register()
+        BtnGray:
+            text: 'Назад ко входу'
+            on_release: app.go('login')
+        Widget:
+
+# ---------- главный экран ----------
+<HomeScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(30)
+        spacing: dp(12)
+        Widget:
+            size_hint_y: 0.1
+        Title:
+            text: 'Главное меню'
+        Text:
+            id: hello
+        Text:
+            id: stats
+        Widget:
+            size_hint_y: 0.05
+        Btn:
+            text: 'Список фехтовальщиков'
+            on_release: app.go('list')
+        Btn:
+            text: 'Добавить фехтовальщика'
+            on_release: app.open_form(None)
+        BtnGray:
+            text: 'Выход'
+            on_release: app.logout()
+        Widget:
+
+# ---------- список + поиск/фильтрация ----------
+<ListScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(14)
+        spacing: dp(8)
+        Title:
+            text: 'Фехтовальщики'
+            height: dp(44)
+        Field:
+            id: search
+            hint_text: 'Поиск по имени или клубу'
+            on_text_validate: root.refresh()
+        BoxLayout:
+            size_hint_y: None
+            height: dp(44)
+            spacing: dp(8)
+            Pick:
+                id: weapon
+                text: 'Все'
+                values: app.weapon_filter
+            Btn:
+                text: 'Найти'
+                size_hint_x: 0.5
+                height: dp(44)
+                on_release: root.refresh()
+        ScrollView:
+            GridLayout:
+                id: box
+                cols: 1
+                spacing: dp(6)
+                size_hint_y: None
+                height: self.minimum_height
+        BoxLayout:
+            size_hint_y: None
+            height: dp(48)
+            spacing: dp(8)
+            BtnGray:
+                text: 'Назад'
+                on_release: app.go('home')
+            Btn:
+                text: '+ Добавить'
+                on_release: app.open_form(None)
+
+# ---------- просмотр записи ----------
+<DetailScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(20)
+        spacing: dp(10)
+        Title:
+            id: name
+        Label:
+            id: info
+            markup: True
+            color: 0.92, 0.92, 0.95, 1
+            halign: 'left'
+            valign: 'top'
+            text_size: self.width, None
+            size_hint_y: 1
+        Btn:
+            text: 'Редактировать'
+            on_release: app.open_form(root.fighter_id)
+        Btn:
+            text: 'Удалить'
+            background_color: 0.55, 0.1, 0.12, 1
+            on_release: app.confirm_delete(root.fighter_id)
+        BtnGray:
+            text: 'Назад к списку'
+            on_release: app.go('list')
+
+# ---------- создание / редактирование ----------
+<FormScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(20)
+        spacing: dp(8)
+        Title:
+            id: title
+        Field:
+            id: full_name
+            hint_text: 'ФИО'
+        Pick:
+            id: weapon
+            text: 'рапира'
+            values: app.weapons
+        Field:
+            id: club
+            hint_text: 'Клуб (необязательно)'
+        Field:
+            id: experience
+            hint_text: 'Опыт, лет'
+            input_filter: 'int'
+        Field:
+            id: rating
+            hint_text: 'Рейтинг'
+            input_filter: 'int'
+        TextInput:
+            id: bio
+            hint_text: 'О себе (необязательно)'
+            background_color: 0.18, 0.18, 0.24, 1
+            foreground_color: 1, 1, 1, 1
+            cursor_color: 1, 1, 1, 1
+            hint_text_color: 0.6, 0.6, 0.66, 1
+        Btn:
+            text: 'Сохранить'
+            on_release: root.save()
+        BtnGray:
+            text: 'Отмена'
+            on_release: app.go('list')
